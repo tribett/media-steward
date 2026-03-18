@@ -3,6 +3,15 @@
   "tasks": {
     "build": { "dependsOn": ["^build"], "outputs": [".next/**", "dist/**"] },
     "dev": { "cache": false, "persistent": true },
-    "test": { "dependsOn": ["^build"] }
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**/*.ts", "src/**/*.tsx", "**/*.test.ts"],
+      "outputs": []
+    },
+    "test:e2e": {
+      "dependsOn": ["build"],
+      "inputs": ["e2e/**/*.ts", "playwright.config.ts"],
+      "outputs": ["playwright-report/**", "test-results/**"]
+    }
   }
 }
