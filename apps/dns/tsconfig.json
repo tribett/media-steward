@@ -2,12 +2,11 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src",
     "paths": {
       "@media-steward/types": ["../../packages/types/src/index.ts"],
       "@media-steward/db": ["../../packages/db/src/index.ts"],
       "@media-steward/blocklists": ["../../packages/blocklists/src/index.ts"]
     }
   },
-  "include": ["src"]
+  "include": ["src", "../../packages/types/src", "../../packages/db/src", "../../packages/blocklists/src"]
 }
