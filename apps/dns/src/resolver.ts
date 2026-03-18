@@ -12,6 +12,25 @@ let cachedBlockedSet: Set<string> | null = null;
 let lastRefresh = 0;
 const REFRESH_INTERVAL = 6 * 60 * 60 * 1000; // 6 hours
 
+let cachedFenceEnabled: boolean | null = null;
+let fenceEnabledLastFetch = 0;
+const SETTINGS_TTL = 30_000; // 30 seconds
+
+export async function getFenceEnabled(): Promise<boolean> {
+  if (cachedFenceEnabled === null || Date.now() - fenceEnabledLastFetch > SETTINGS_TTL) {
+    const setting = await prisma.settings.findUnique({ where: { key: 'fence_enabled' } });
+    cachedFenceEnabled = setting?.value === 'true';
+    fenceEnabledLastFetch = Date.now();
+  }
+  return cachedFenceEnabled;
+}
+
+export function invalidateFenceEnabled(): void {
+  cachedFenceEnabled = null;
+}
+
+let refreshPromise: Promise<void> | null = null;
+
 export async function refreshBlocklists(): Promise<void> {
   const domains: string[][] = [];
 
@@ -53,14 +72,16 @@ export async function refreshBlocklists(): Promise<void> {
 
 async function getBlockedSet(): Promise<Set<string>> {
   if (!cachedBlockedSet || Date.now() - lastRefresh > REFRESH_INTERVAL) {
-    await refreshBlocklists();
+    if (!refreshPromise) {
+      refreshPromise = refreshBlocklists().finally(() => { refreshPromise = null; });
+    }
+    await refreshPromise;
   }
   return cachedBlockedSet!;
 }
 
 export async function checkDomain(domain: string): Promise<boolean> {
-  const fenceEnabledSetting = await prisma.settings.findUnique({ where: { key: 'fence_enabled' } });
-  if (fenceEnabledSetting?.value !== 'true') return false;
+  if (!(await getFenceEnabled())) return false;
   const blocked = await getBlockedSet();
   return isBlocked(domain, blocked);
 }
