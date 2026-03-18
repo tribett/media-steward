@@ -127,10 +127,3 @@
     @apply font-sans;
   }
 }
-
-/* Custom overrides for Media Steward — dark base */
-@layer base {
-  body {
-    @apply bg-zinc-950 text-zinc-50;
-  }
-}
