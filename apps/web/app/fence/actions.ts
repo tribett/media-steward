@@ -17,12 +17,14 @@ export async function updatePreset(formData: FormData) {
 
 export async function toggleBlocklist(formData: FormData) {
   const id = formData.get('id') as string;
+  if (!id) return;
   const enabled = formData.get('enabled') === 'true';
   await prisma.blocklistSource.update({
     where: { id },
     data: { enabled },
   });
   revalidatePath('/fence');
+  revalidatePath('/');
 }
 
 export async function addScheduleBlock(formData: FormData) {
@@ -44,10 +46,13 @@ export async function addScheduleBlock(formData: FormData) {
     data: { dayOfWeek, startHour, endHour, label },
   });
   revalidatePath('/fence');
+  revalidatePath('/');
 }
 
 export async function deleteScheduleBlock(formData: FormData) {
   const id = formData.get('id') as string;
+  if (!id) return;
   await prisma.scheduleBlock.delete({ where: { id } });
   revalidatePath('/fence');
+  revalidatePath('/');
 }
