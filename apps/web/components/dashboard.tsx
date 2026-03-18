@@ -27,12 +27,13 @@ export default async function Dashboard() {
   const householdName = householdNameSetting?.value ?? 'My Household';
   const blockRate = totalToday > 0 ? Math.round((blockedToday / totalToday) * 100) : 0;
 
-  // Get today's day of week to filter rhythms
-  const todayDow = new Date().getDay();
+  // Get today's day name to filter rhythms (seed stores full names: "Monday", "Friday", etc.)
+  const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const todayName = DAY_NAMES[new Date().getDay()];
   const todaysRhythms = rhythms.filter((r) => {
     try {
-      const days: number[] = JSON.parse(r.days);
-      return days.includes(todayDow) || days.length === 0;
+      const days: string[] = JSON.parse(r.days);
+      return days.length === 0 || days.includes(todayName);
     } catch {
       return true;
     }
