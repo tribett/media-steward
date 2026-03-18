@@ -33,7 +33,8 @@ export async function addRhythm(formData: FormData) {
 export async function deleteRhythm(formData: FormData) {
   const id = formData.get('id') as string;
   if (!id) return;
-  await prisma.mediaRhythm.delete({ where: { id } });
+  // deleteMany is idempotent — no error if record already gone (avoids P2025 on double-submit)
+  await prisma.mediaRhythm.deleteMany({ where: { id } });
   revalidatePath('/steward');
   revalidatePath('/');
 }
