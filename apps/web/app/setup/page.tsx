@@ -1,6 +1,7 @@
 import os from 'os';
 import { prisma } from '@media-steward/db';
 import { completeSetup } from './actions';
+import { CopyButton } from '@/components/copy-button';
 
 function getLocalIP(): string {
   const interfaces = os.networkInterfaces();
@@ -15,9 +16,11 @@ function getLocalIP(): string {
   return '192.168.x.x';
 }
 
+const LOCAL_IP = getLocalIP();
+
 export default async function SetupPage() {
   const sources = await prisma.blocklistSource.findMany();
-  const localIP = getLocalIP();
+  const localIP = LOCAL_IP;
 
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-100">
@@ -176,12 +179,15 @@ export default async function SetupPage() {
               <p className="text-zinc-300 text-sm mb-3">
                 Point your router's Primary DNS to this server:
               </p>
-              <code className="block bg-zinc-800 rounded px-3 py-2 font-mono text-emerald-400 text-sm">
-                {localIP}:53
-              </code>
+              <div className="flex items-center gap-2 bg-zinc-800 rounded px-3 py-2">
+                <code className="font-mono text-emerald-400 text-sm flex-1">
+                  {localIP}
+                </code>
+                <CopyButton text={localIP} />
+              </div>
               <p className="text-zinc-400 text-xs mt-3">
                 In BrightSpeed: Router Settings → Internet → DNS Settings →
-                Primary DNS
+                Primary DNS. The DNS server listens on port 53 (standard).
               </p>
               <p className="text-zinc-300 text-sm mt-2 font-medium">
                 Every device on your WiFi will be covered automatically.

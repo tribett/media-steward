@@ -29,13 +29,14 @@ export async function completeSetup(formData: FormData) {
 
   // Update blocklist enabled states from checkboxes
   const sources = await prisma.blocklistSource.findMany();
-  for (const source of sources) {
-    const enabled = formData.get(`blocklist_${source.id}`) === 'on';
-    await prisma.blocklistSource.update({
-      where: { id: source.id },
-      data: { enabled },
-    });
-  }
+  await Promise.all(
+    sources.map((source) =>
+      prisma.blocklistSource.update({
+        where: { id: source.id },
+        data: { enabled: formData.get(`blocklist_${source.id}`) === 'on' },
+      })
+    )
+  );
 
   // Mark setup complete
   await prisma.settings.upsert({
