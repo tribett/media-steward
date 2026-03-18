@@ -65,6 +65,14 @@ async function main() {
     });
   }
 
+  // Helper: generate stable ID from title
+  const slugId = (title: string) =>
+    title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, '')
+      .trim()
+      .replace(/\s+/g, '-');
+
   // Default media rhythms
   const defaultRhythms = [
     {
@@ -88,10 +96,11 @@ async function main() {
   ];
 
   for (const rhythm of defaultRhythms) {
+    const id = slugId(rhythm.title);
     await prisma.mediaRhythm.upsert({
-      where: { title: rhythm.title },
+      where: { id },
       update: {},
-      create: rhythm,
+      create: { id, ...rhythm },
     });
   }
 
