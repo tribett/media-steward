@@ -1,0 +1,21 @@
+{
+  "name": "@media-steward/dns",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "dns2": "^2.1.0",
+    "@media-steward/db": "*",
+    "@media-steward/blocklists": "*",
+    "@media-steward/types": "*"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.3",
+    "vitest": "^3.0.9",
+    "typescript": "^5.8.2"
+  }
+}

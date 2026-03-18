@@ -1,0 +1,12 @@
+node_modules
+.next
+dist
+*.db
+*.db-shm
+*.db-wal
+.turbo
+.env.local
+.env
+generated/
+playwright-report/
+test-results/
