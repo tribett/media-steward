@@ -42,7 +42,7 @@ model RssFeed {
 
 model MediaRhythm {
   id          String  @id @default(cuid())
-  title       String
+  title       String  @unique
   description String?
   time        String?
   days        String

@@ -7705,14 +7705,14 @@ export namespace Prisma {
 
   export type MediaRhythmWhereUniqueInput = Prisma.AtLeast<{
     id?: string
+    title?: string
     AND?: MediaRhythmWhereInput | MediaRhythmWhereInput[]
     OR?: MediaRhythmWhereInput[]
     NOT?: MediaRhythmWhereInput | MediaRhythmWhereInput[]
-    title?: StringFilter<"MediaRhythm"> | string
     description?: StringNullableFilter<"MediaRhythm"> | string | null
     time?: StringNullableFilter<"MediaRhythm"> | string | null
     days?: StringFilter<"MediaRhythm"> | string
-  }, "id">
+  }, "id" | "title">
 
   export type MediaRhythmOrderByWithAggregationInput = {
     id?: SortOrder

@@ -88,10 +88,11 @@ async function main() {
   ];
 
   for (const rhythm of defaultRhythms) {
-    const exists = await prisma.mediaRhythm.findFirst({ where: { title: rhythm.title } });
-    if (!exists) {
-      await prisma.mediaRhythm.create({ data: rhythm });
-    }
+    await prisma.mediaRhythm.upsert({
+      where: { title: rhythm.title },
+      update: {},
+      create: rhythm,
+    });
   }
 
   console.log('✓ Database seeded successfully');
