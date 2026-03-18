@@ -40,7 +40,7 @@ async function fetchFeed(feed: { name: string; url: string }): Promise<FeedItem[
     const items: FeedItem[] = [];
     let match;
 
-    while ((match = itemRegex.exec(xml)) !== null && items.length < 20) {
+    while ((match = itemRegex.exec(xml)) !== null) {
       const block = match[1];
       const title = extractTag(block, 'title') || '(no title)';
       const link = extractLink(block);
