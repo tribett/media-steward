@@ -8,5 +8,6 @@ dist
 .env.local
 .env
 generated/
+!packages/db/generated/
 playwright-report/
 test-results/

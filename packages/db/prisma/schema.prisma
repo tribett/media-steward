@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Settings {
+  key   String @id
+  value String
+}
+
+model BlocklistSource {
+  id          String    @id @default(cuid())
+  name        String
+  url         String?
+  enabled     Boolean   @default(true)
+  type        String    @default("builtin")
+  domainCount Int       @default(0)
+  lastSynced  DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+model ScheduleBlock {
+  id        String  @id @default(cuid())
+  dayOfWeek Int
+  startHour Int
+  endHour   Int
+  label     String?
+}
+
+model RssFeed {
+  id        String   @id @default(cuid())
+  name      String
+  url       String
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model MediaRhythm {
+  id          String  @id @default(cuid())
+  title       String
+  description String?
+  time        String?
+  days        String
+}
+
+model DnsQuery {
+  id        String   @id @default(cuid())
+  domain    String
+  blocked   Boolean
+  timestamp DateTime @default(now())
+
+  @@index([timestamp])
+  @@index([blocked, timestamp])
+}
