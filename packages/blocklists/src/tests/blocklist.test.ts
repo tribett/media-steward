@@ -98,11 +98,11 @@ describe('curated lists', () => {
   });
 
   it('SHORT_FORM_CONTENT includes tiktok', () => {
-    expect(SHORT_FORM_CONTENT.some(d => d.includes('tiktok'))).toBe(true);
+    expect(SHORT_FORM_CONTENT.some((d: string) => d.includes('tiktok'))).toBe(true);
   });
 
   it('SOCIAL_MEDIA includes facebook', () => {
-    expect(SOCIAL_MEDIA.some(d => d.includes('facebook'))).toBe(true);
+    expect(SOCIAL_MEDIA.some((d: string) => d.includes('facebook'))).toBe(true);
   });
 
   it('PRESETS has light, balanced, intentional', () => {
