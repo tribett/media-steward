@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Media Steward</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Tokens (matching the main app's Lantern palette) ── */
+    :root {
+      --bg:         oklch(0.10 0.010 55);
+      --bg-raised:  oklch(0.12 0.012 55);
+      --bg-card:    oklch(0.14 0.014 55);
+      --border:     oklch(0.20 0.010 55);
+      --border-lit: oklch(0.30 0.040 60 / 0.5);
+      --amber:      oklch(0.72 0.14  65);
+      --amber-dim:  oklch(0.55 0.10  65);
+      --amber-glow: oklch(0.72 0.14  65 / 0.12);
+      --amber-bg:   oklch(0.16 0.045 55);
+      --text:       oklch(0.92 0.015 75);
+      --text-muted: oklch(0.55 0.025 65);
+      --text-faint: oklch(0.38 0.015 60);
+      --on:         oklch(0.65 0.13  65);
+      --on-track:   oklch(0.18 0.05  55);
+      --off-track:  oklch(0.16 0.008 55);
+    }
+
+    html { background: var(--bg); }
+
+    body {
+      width: 310px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      /* Subtle noise texture via SVG data-uri */
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    }
+
+    /* ── Header ── */
+    .header {
+      padding: 14px 16px 13px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Ambient glow behind icon */
+    .header::before {
+      content: '';
+      position: absolute;
+      left: -10px;
+      top: -10px;
+      width: 70px;
+      height: 70px;
+      background: radial-gradient(ellipse, oklch(0.72 0.14 65 / 0.10) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .icon-wrap {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--amber-bg);
+      border: 1px solid var(--border-lit);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .icon-wrap svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .header-text { flex: 1; }
+
+    .header-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--amber);
+      letter-spacing: 0.01em;
+      line-height: 1;
+      margin-bottom: 3px;
+    }
+
+    .header-sub {
+      font-size: 10px;
+      color: var(--text-faint);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* ── Status dot ── */
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--amber);
+      box-shadow: 0 0 6px 2px oklch(0.72 0.14 65 / 0.5);
+      animation: pulse 2.5s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.45; }
+    }
+
+    /* ── Section label ── */
+    .section-label {
+      padding: 10px 16px 5px;
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+    }
+
+    /* ── Toggle rows ── */
+    .rows { padding: 2px 0 4px; }
+
+    .row {
+      display: flex;
+      align-items: center;
+      padding: 9px 16px;
+      gap: 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+      position: relative;
+    }
+
+    .row:hover { background: oklch(0.13 0.012 55); }
+
+    .row:active { background: oklch(0.15 0.02 55); }
+
+    /* Subtle left accent when enabled */
+    .row.is-on::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      border-radius: 0 2px 2px 0;
+      background: var(--amber);
+      opacity: 0.6;
+    }
+
+    .row-text { flex: 1; min-width: 0; }
+
+    .row-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+      letter-spacing: -0.01em;
+      margin-bottom: 2px;
+    }
+
+    .row.is-on .row-label { color: var(--text); }
+    .row:not(.is-on) .row-label { color: var(--text-muted); }
+
+    .row-desc {
+      font-size: 10px;
+      color: var(--text-faint);
+      line-height: 1.45;
+      letter-spacing: 0.01em;
+    }
+
+    /* ── Hidden checkbox (we style the label) ── */
+    .row input[type="checkbox"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    /* ── Toggle switch ── */
+    .toggle {
+      position: relative;
+      width: 40px;
+      height: 23px;
+      flex-shrink: 0;
+    }
+
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      border-radius: 23px;
+      background: var(--off-track);
+      border: 1px solid var(--border);
+      transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .toggle-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: var(--text-faint);
+      transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s;
+    }
+
+    /* ON state */
+    .row.is-on .toggle-track {
+      background: var(--on-track);
+      border-color: oklch(0.72 0.14 65 / 0.35);
+      box-shadow: 0 0 8px 0 oklch(0.72 0.14 65 / 0.15);
+    }
+
+    .row.is-on .toggle-thumb {
+      transform: translateX(17px);
+      background: var(--on);
+      box-shadow: 0 0 6px 1px oklch(0.72 0.14 65 / 0.4);
+    }
+
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0 16px;
+      opacity: 0.6;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .footer-link {
+      font-size: 10px;
+      color: var(--text-faint);
+      text-decoration: none;
+      letter-spacing: 0.03em;
+      transition: color 0.15s;
+    }
+
+    .footer-link:hover { color: var(--amber-dim); }
+
+    .footer-badge {
+      font-size: 9px;
+      color: var(--text-faint);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 2px 7px;
+      border-radius: 99px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="icon-wrap">
+      <!-- Lantern / shield flame icon -->
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L20 6V12C20 16.4 16.5 20.2 12 22C7.5 20.2 4 16.4 4 12V6L12 2Z"
+              fill="oklch(0.72 0.14 65 / 0.15)"
+              stroke="oklch(0.72 0.14 65)"
+              stroke-width="1.5"
+              stroke-linejoin="round"/>
+        <path d="M12 8C12 8 14 10 14 12C14 13.1 13.1 14 12 14C10.9 14 10 13.1 10 12C10 10 12 8 12 8Z"
+              fill="oklch(0.72 0.14 65)"
+              opacity="0.9"/>
+        <path d="M12 14V17"
+              stroke="oklch(0.72 0.14 65)"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              opacity="0.5"/>
+      </svg>
+    </div>
+
+    <div class="header-text">
+      <div class="header-title">Media Steward</div>
+      <div class="header-sub">YouTube Fence</div>
+    </div>
+
+    <div class="status-dot" id="statusDot" title="Active"></div>
+  </div>
+
+  <!-- Settings rows -->
+  <div class="section-label">Controls</div>
+
+  <div class="rows" id="rows">
+
+    <label class="row" id="row-redirectHomepage" for="redirectHomepage">
+      <input type="checkbox" id="redirectHomepage" data-key="redirectHomepage">
+      <div class="row-text">
+        <div class="row-label">Subscriptions as home</div>
+        <div class="row-desc">YouTube.com → your subscriptions, not the algorithm</div>
+      </div>
+      <div class="toggle">
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </div>
+    </label>
+
+    <div class="divider"></div>
+
+    <label class="row" id="row-blockShorts" for="blockShorts">
+      <input type="checkbox" id="blockShorts" data-key="blockShorts">
+      <div class="row-text">
+        <div class="row-label">Remove Shorts</div>
+        <div class="row-desc">Hide Shorts shelves in feed, search, and channels</div>
+      </div>
+      <div class="toggle">
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </div>
+    </label>
+
+    <div class="divider"></div>
+
+    <label class="row" id="row-hideSidebar" for="hideSidebar">
+      <input type="checkbox" id="hideSidebar" data-key="hideSidebar">
+      <div class="row-text">
+        <div class="row-label">Hide recommendations</div>
+        <div class="row-desc">Remove "Up Next" sidebar on watch pages — just the video</div>
+      </div>
+      <div class="toggle">
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </div>
+    </label>
+
+    <div class="divider"></div>
+
+    <label class="row" id="row-hideTrending" for="hideTrending">
+      <input type="checkbox" id="hideTrending" data-key="hideTrending">
+      <div class="row-text">
+        <div class="row-label">Hide trending</div>
+        <div class="row-desc">Remove Trending &amp; Explore from navigation</div>
+      </div>
+      <div class="toggle">
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </div>
+    </label>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <a class="footer-link" href="https://github.com/tribett/media-steward" target="_blank">
+      github.com/tribett/media-steward
+    </a>
+    <span class="footer-badge">v1.0</span>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

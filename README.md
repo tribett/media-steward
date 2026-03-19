@@ -13,6 +13,7 @@
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=flat-square&logo=typescript)
 ![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-4%2F5-C51A4A?style=flat-square&logo=raspberrypi)
+![Extension](https://img.shields.io/badge/Browser-Extension-4285F4?style=flat-square&logo=googlechrome)
 
 </div>
 
@@ -20,9 +21,11 @@
 
 ## What is this?
 
-The Media Steward is a self-hosted household tool that runs on any old computer and gives your family three things:
+The Media Steward is a self-hosted household tool that runs on any old computer and gives your family four things:
 
 - **🛡️ Fence** — DNS-level content blocking. Configure presets (Light / Balanced / Intentional), toggle blocklist sources, and schedule time blocks when all internet is cut off. Because it runs at the DNS layer, it covers *every device on your WiFi* automatically — phones, tablets, smart TVs, everything — with a single router setting change.
+
+- **🧩 Extension** — A Chrome/Firefox extension that surgically fixes YouTube: redirects the algorithmic homepage to your subscriptions feed, removes Shorts everywhere, and hides the "Up Next" recommendations sidebar. What DNS can't reach (inside a platform), the extension handles.
 
 - **🌱 Cultivate** — A curated RSS feed reader. Add only the sources you've chosen. No algorithmic feeds, no recommendations, no infinite scroll. Just your articles, in order.
 
@@ -72,20 +75,53 @@ sudo usermod -aG docker $USER   # log out and back in after this
 
 ---
 
+## Browser Extension
+
+The extension lives in `apps/extension/` and requires no build step.
+
+**Install (local):**
+1. Chrome: `chrome://extensions` → Enable **Developer mode** → **Load unpacked** → select `apps/extension/`
+2. Firefox: `about:debugging` → **Load Temporary Add-on** → select `apps/extension/manifest.json`
+
+**What it does:**
+
+| Toggle | Effect |
+|---|---|
+| Subscriptions as home | Redirects `youtube.com` to your subscriptions feed |
+| Remove Shorts | Hides Shorts shelves in feed, search, and channels |
+| Hide recommendations | Removes the "Up Next" sidebar on watch pages |
+| Hide trending | Removes Trending & Explore from navigation |
+
+Settings sync across your devices via `chrome.storage.sync`. The extension makes zero network requests and collects no data.
+
+**Publishing to Chrome Web Store:** The icons are already generated as PNG at all required sizes. You need a [$5 Chrome Developer account](https://chrome.google.com/webstore/devconsole), then upload the `apps/extension/` folder as a zip. See `apps/extension/README.md` for full instructions.
+
+---
+
 ## Architecture
 
 ```
 media-steward/
 ├── apps/
-│   ├── dns/          # UDP + TCP DNS server (dns2, port 53)
-│   └── web/          # Next.js 15 App Router dashboard (port 3000)
+│   ├── dns/           # UDP + TCP DNS server (dns2, port 53)
+│   ├── web/           # Next.js 15 App Router dashboard (port 3000)
+│   └── extension/     # Chrome/Firefox browser extension (Manifest V3)
 ├── packages/
-│   ├── db/           # Prisma + SQLite schema & client
-│   ├── blocklists/   # Steven Black host-file blocklist loader
-│   └── types/        # Shared TypeScript types
+│   ├── db/            # Prisma + SQLite schema & client
+│   ├── blocklists/    # Steven Black host-file blocklist loader
+│   └── types/         # Shared TypeScript types
 ├── docker-compose.yml
 └── start.sh
 ```
+
+The system has two complementary layers:
+
+| Layer | Tool | What it blocks |
+|---|---|---|
+| **Network** (all devices) | DNS server + dashboard | Ad networks, TikTok, social media, custom blocklists |
+| **Browser** (per device) | Chrome/Firefox extension | YouTube Shorts, algorithmic homepage, sidebar recommendations |
+
+DNS blocks whole domains — fast, covers every device on WiFi. The browser extension goes inside YouTube and surgically removes the addictive parts while leaving subscriptions intact.
 
 **Stack:**
 - [Next.js 15](https://nextjs.org) — App Router, Server Actions, Server Components
@@ -94,6 +130,7 @@ media-steward/
 - [Tailwind v4](https://tailwindcss.com) + [shadcn/ui](https://ui.shadcn.com) — styling
 - [Turborepo](https://turbo.build) — monorepo build orchestration
 - [Docker Compose](https://docs.docker.com/compose/) — one-command deployment
+- Manifest V3 — Chrome/Firefox extension, no build step
 
 **How DNS blocking works:**
 
