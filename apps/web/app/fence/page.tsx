@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { prisma } from '@media-steward/db';
+import { OllamaRepair } from '@/components/ollama-repair';
 import {
   updatePreset,
   toggleBlocklist,
@@ -282,6 +283,22 @@ export default async function FencePage() {
               </div>
             </form>
           </div>
+        </section>
+
+        <div className="h-px bg-border" />
+
+        {/* Section 4: AI Repair (Ollama) */}
+        <section className="space-y-5" id="ai-repair">
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-mono text-muted-foreground/60 w-4">04</span>
+            <h2 className="text-base font-serif font-medium text-foreground">AI Repair</h2>
+          </div>
+          <p className="text-muted-foreground text-sm -mt-2">
+            If the browser extension stops hiding Shorts or recommendations, YouTube may have
+            updated its page structure. Use a local Ollama model to diagnose the issue and
+            generate updated CSS selectors — no data leaves your machine.
+          </p>
+          <OllamaRepair />
         </section>
 
       </div>

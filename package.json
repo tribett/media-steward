@@ -1,7 +1,10 @@
 {
   "name": "media-steward",
   "private": true,
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
@@ -11,5 +14,8 @@
   "devDependencies": {
     "turbo": "^2.5.0",
     "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "sharp": "^0.34.5"
   }
 }

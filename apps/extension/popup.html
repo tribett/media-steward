@@ -262,6 +262,57 @@
       letter-spacing: 0.06em;
       text-transform: uppercase;
     }
+
+    /* ── AI config banner (shown when AI-patched selectors are loaded) ── */
+    .config-banner {
+      display: none; /* shown by popup.js when msConfig is active */
+      align-items: center;
+      gap: 8px;
+      margin: 6px 12px 2px;
+      padding: 7px 11px;
+      border-radius: 8px;
+      background: var(--amber-bg);
+      border: 1px solid oklch(0.72 0.14 65 / 0.2);
+      font-size: 10px;
+      letter-spacing: 0.02em;
+    }
+
+    .config-banner-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--amber);
+      flex-shrink: 0;
+    }
+
+    .config-banner-text {
+      flex: 1;
+      color: var(--amber-dim);
+    }
+
+    .config-banner-link {
+      color: var(--amber);
+      text-decoration: none;
+      font-weight: 500;
+      transition: opacity 0.15s;
+    }
+
+    .config-banner-link:hover { opacity: 0.75; }
+
+    /* ── Refresh button in footer ── */
+    .footer-refresh {
+      font-size: 10px;
+      color: var(--text-faint);
+      background: none;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.03em;
+      padding: 0;
+      transition: color 0.15s;
+      font-family: inherit;
+    }
+
+    .footer-refresh:hover { color: var(--amber-dim); }
   </style>
 </head>
 <body>
@@ -356,12 +407,28 @@
 
   </div>
 
+  <!-- AI config banner: shown by popup.js when dashboard has patched selectors -->
+  <div class="config-banner" id="configBanner">
+    <div class="config-banner-dot"></div>
+    <span class="config-banner-text">AI-patched selectors active</span>
+    <a
+      class="config-banner-link"
+      href="http://localhost:3000/fence#ai-repair"
+      target="_blank"
+    >View repair →</a>
+  </div>
+
   <!-- Footer -->
   <div class="footer">
     <a class="footer-link" href="https://github.com/tribett/media-steward" target="_blank">
       github.com/tribett/media-steward
     </a>
-    <span class="footer-badge">v1.0</span>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="footer-refresh" id="refreshConfig" title="Re-fetch selector config from dashboard">
+        ↻ Sync
+      </button>
+      <span class="footer-badge">v1.1</span>
+    </div>
   </div>
 
   <script src="popup.js"></script>

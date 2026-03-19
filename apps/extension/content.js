@@ -72,13 +72,39 @@ const SELECTORS = {
 
 };
 
+// ─── Custom selectors (AI-patched via dashboard) ──────────────────────────────
+// background.js fetches /api/extension-config from the local dashboard and
+// stores the result here.  If the dashboard isn't running, this stays empty
+// and we fall back to the built-in SELECTORS above.
+let customSelectors = {};
+
+chrome.storage.local.get(['msConfig'], (result) => {
+  if (result.msConfig?.selectors) {
+    customSelectors = result.msConfig.selectors;
+    // Re-apply immediately so the new selectors take effect without a reload.
+    applyStyles();
+  }
+});
+
+// Pick up config changes pushed by background.js (e.g. after hourly refresh or
+// the user clicked Refresh in the popup) without requiring a page reload.
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === 'local' && changes.msConfig?.newValue?.selectors) {
+    customSelectors = changes.msConfig.newValue.selectors;
+    applyStyles();
+  }
+});
+
 // ─── CSS builder ──────────────────────────────────────────────────────────────
-// Builds a CSS rule for each enabled feature using all its selectors.
+// Builds a CSS rule for each enabled feature.
+// Uses AI-patched selectors from the dashboard if available, falls back to
+// the built-in SELECTORS registry above.
 function buildCSS(activeSettings) {
   const blocks = [];
 
-  for (const [key, selectors] of Object.entries(SELECTORS)) {
+  for (const [key, builtIn] of Object.entries(SELECTORS)) {
     if (!activeSettings[key]) continue;
+    const selectors = customSelectors[key] ?? builtIn;
     blocks.push(`${selectors.join(',\n')} { display: none !important; }`);
   }
 

@@ -32,8 +32,21 @@ function applyToUI(stored) {
   }
 }
 
+// ─── Show AI config banner when custom selectors are loaded ───────────────────
+function applyConfigBanner(local) {
+  const banner = document.getElementById('configBanner');
+  if (!banner) return;
+
+  const hasCustom =
+    local.msConfig?.selectors &&
+    Object.keys(local.msConfig.selectors).length > 0;
+
+  banner.style.display = hasCustom ? 'flex' : 'none';
+}
+
 // ─── Load ─────────────────────────────────────────────────────────────────────
 chrome.storage.sync.get(DEFAULT_SETTINGS, applyToUI);
+chrome.storage.local.get(['msConfig', 'msConfigAt'], applyConfigBanner);
 
 // ─── Save on toggle ───────────────────────────────────────────────────────────
 for (const cb of checkboxes) {
@@ -61,5 +74,25 @@ for (const cb of checkboxes) {
 
     // Refresh status dot
     chrome.storage.sync.get(DEFAULT_SETTINGS, applyToUI);
+  });
+}
+
+// ─── Manual config refresh button ─────────────────────────────────────────────
+// Asks background.js to re-fetch selector config from the local dashboard so
+// AI-generated selector updates take effect without waiting an hour.
+const refreshBtn = document.getElementById('refreshConfig');
+if (refreshBtn) {
+  refreshBtn.addEventListener('click', () => {
+    refreshBtn.textContent = '↻ Syncing…';
+    refreshBtn.disabled = true;
+
+    chrome.runtime.sendMessage({ type: 'REFRESH_CONFIG' }, () => {
+      // Re-read local storage to update the banner
+      chrome.storage.local.get(['msConfig', 'msConfigAt'], (local) => {
+        applyConfigBanner(local);
+        refreshBtn.textContent = '↻ Sync';
+        refreshBtn.disabled = false;
+      });
+    });
   });
 }
