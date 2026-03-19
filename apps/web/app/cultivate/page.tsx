@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { prisma } from '@media-steward/db';
 import { addFeed, deleteFeed, toggleFeed } from './actions';
 
+export const dynamic = 'force-dynamic';
+
 interface FeedItem {
   title: string;
   link: string;

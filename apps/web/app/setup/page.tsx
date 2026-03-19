@@ -3,6 +3,8 @@ import { prisma } from '@media-steward/db';
 import { completeSetup } from './actions';
 import { CopyButton } from '@/components/copy-button';
 
+export const dynamic = 'force-dynamic';
+
 function getLocalIP(): string {
   const interfaces = os.networkInterfaces();
   for (const iface of Object.values(interfaces)) {

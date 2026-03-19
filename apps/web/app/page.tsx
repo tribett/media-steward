@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@media-steward/db';
 import Dashboard from '@/components/dashboard';
 
+export const dynamic = 'force-dynamic';
+
 export default async function HomePage() {
   const setting = await prisma.settings.findUnique({
     where: { key: 'setup_complete' },

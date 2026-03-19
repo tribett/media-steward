@@ -7,6 +7,8 @@ import {
   deleteScheduleBlock,
 } from './actions';
 
+export const dynamic = 'force-dynamic';
+
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 function formatHour(hour: number): string {

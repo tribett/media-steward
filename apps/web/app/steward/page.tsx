@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { prisma } from '@media-steward/db';
 import { addRhythm, deleteRhythm } from './actions';
 
+export const dynamic = 'force-dynamic';
+
 const FULL_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const ABBR_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
