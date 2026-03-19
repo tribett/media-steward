@@ -1,6 +1,6 @@
 'use strict';
 
-// ─── Defaults ────────────────────────────────────────────────────────────────
+// ─── Defaults ─────────────────────────────────────────────────────────────────
 const DEFAULT_SETTINGS = {
   redirectHomepage: true,   // youtube.com → subscriptions feed
   blockShorts:      true,   // hide Shorts everywhere
@@ -10,48 +10,101 @@ const DEFAULT_SETTINGS = {
 
 const STYLE_ID = 'media-steward-fence';
 
-// ─── CSS injected per-setting ─────────────────────────────────────────────────
+// ─── Selector registry ────────────────────────────────────────────────────────
 //
-// YouTube is built on custom elements (ytd-*). These selectors have been stable
-// since 2021; YouTube rarely changes element names. The MutationObserver below
-// re-injects after SPA navigation in case YouTube clears the <head>.
+// MAINTENANCE NOTE: If YouTube changes its element structure, update the
+// selectors below. Each feature has multiple overlapping selectors — primary
+// (most specific), secondary (broader fallback), and semantic (content-based).
 //
-const CSS = {
-  blockShorts: `
-    /* Shorts shelf on homepage and subscriptions feed */
-    ytd-rich-shelf-renderer[is-shorts],
-    ytd-rich-shelf-renderer[is-shorts-column],
+// To verify selectors still work: open YouTube, press F12, run in the console:
+//   MS_DEBUG = true; location.reload();
+// The extension will log which selectors matched.
+//
+// The GitHub Action in .github/workflows/extension-health.yml runs this
+// check automatically every Monday and opens an issue if something breaks.
+//
+const SELECTORS = {
 
-    /* Shorts in search results */
-    ytd-reel-shelf-renderer,
+  blockShorts: [
+    // Primary: stable attribute markers on the shelf element (since 2021)
+    'ytd-rich-shelf-renderer[is-shorts]',
+    'ytd-rich-shelf-renderer[is-shorts-column]',
 
-    /* Individual Short tiles in grid (e.g. channel Shorts tab) */
-    ytd-rich-grid-slim-media,
+    // Secondary: the reel shelf variant used in search + subscriptions
+    'ytd-reel-shelf-renderer',
 
-    /* Shorts in sidebar "related" panel */
-    ytd-reel-item-renderer {
-      display: none !important;
-    }
-  `,
+    // Tertiary: individual Short tiles (channel Shorts tab grid)
+    'ytd-rich-grid-slim-media',
+    'ytd-reel-item-renderer',
 
-  hideSidebar: `
-    /* "Up Next" / recommendations column on watch pages */
-    #secondary.ytd-watch-flexy,
-    #secondary-inner.ytd-watch-flexy {
-      display: none !important;
-    }
-  `,
+    // Semantic fallbacks: target by the Shorts icon aria-label
+    // (YouTube is unlikely to remove accessibility labels)
+    'ytd-rich-section-renderer:has(ytd-rich-shelf-renderer[is-shorts])',
+    '#shorts-container',
 
-  hideTrending: `
-    /* Trending & Explore entries in the left guide nav */
-    ytd-guide-entry-renderer:has(a[href="/feed/trending"]),
-    ytd-guide-entry-renderer:has(a[href="/feed/explore"]),
-    ytd-mini-guide-entry-renderer:has(a[href="/feed/trending"]),
-    ytd-mini-guide-entry-renderer:has(a[href="/feed/explore"]) {
-      display: none !important;
-    }
-  `,
+    // Future-proofing: any shelf that YouTube marks with a shorts role
+    '[page-subtype="shorts"]',
+  ],
+
+  hideSidebar: [
+    // Primary: the secondary column on watch pages (stable layout ID since ~2018)
+    '#secondary.ytd-watch-flexy',
+    '#secondary-inner.ytd-watch-flexy',
+
+    // Secondary: the recommendations renderer itself
+    'ytd-watch-next-secondary-results-renderer',
+
+    // Tertiary: catch new theater/full-bleed layouts
+    'ytd-watch-flexy #secondary',
+  ],
+
+  hideTrending: [
+    // Primary: guide entries that link to trending/explore
+    // (href-based selectors survive element renames)
+    'ytd-guide-entry-renderer:has(a[href="/feed/trending"])',
+    'ytd-guide-entry-renderer:has(a[href="/feed/explore"])',
+    'ytd-mini-guide-entry-renderer:has(a[href="/feed/trending"])',
+    'ytd-mini-guide-entry-renderer:has(a[href="/feed/explore"])',
+
+    // Secondary: the "What to Watch" / Explore section in the guide
+    'ytd-guide-section-renderer:has(a[href="/feed/explore"])',
+  ],
+
 };
+
+// ─── CSS builder ──────────────────────────────────────────────────────────────
+// Builds a CSS rule for each enabled feature using all its selectors.
+function buildCSS(activeSettings) {
+  const blocks = [];
+
+  for (const [key, selectors] of Object.entries(SELECTORS)) {
+    if (!activeSettings[key]) continue;
+    blocks.push(`${selectors.join(',\n')} { display: none !important; }`);
+  }
+
+  return blocks.join('\n\n');
+}
+
+// ─── Debug / health check ─────────────────────────────────────────────────────
+// Set MS_DEBUG=true in the console and reload to see which selectors matched.
+function debugReport() {
+  if (!window.MS_DEBUG) return;
+
+  console.group('[Media Steward] Selector health report');
+  for (const [feature, selectors] of Object.entries(SELECTORS)) {
+    console.group(feature);
+    for (const sel of selectors) {
+      try {
+        const count = document.querySelectorAll(sel).length;
+        console.log(`${count > 0 ? '✅' : '—'} ${sel} (${count} elements)`);
+      } catch {
+        console.warn(`⚠️  Invalid selector: ${sel}`);
+      }
+    }
+    console.groupEnd();
+  }
+  console.groupEnd();
+}
 
 // ─── State ────────────────────────────────────────────────────────────────────
 let settings = { ...DEFAULT_SETTINGS };
@@ -62,63 +115,43 @@ function applyStyles() {
   if (!el) {
     el = document.createElement('style');
     el.id = STYLE_ID;
-    // Attach to <head> if ready, otherwise <html> root (document_start runs early)
     (document.head || document.documentElement).appendChild(el);
   }
-
-  const active = Object.entries(CSS)
-    .filter(([key]) => settings[key])
-    .map(([, css]) => css)
-    .join('\n');
-
-  el.textContent = active;
+  el.textContent = buildCSS(settings);
 }
 
 // ─── Navigation handling ──────────────────────────────────────────────────────
-//
-// Only redirect when the user lands on the algorithm-driven pages.
-// We never redirect if the user is navigating to a specific video or channel
-// — those are intentional choices.
-//
 const REDIRECT_PATHS = new Set(['/', '/feed/trending', '/feed/explore']);
 const SHORTS_RE = /^\/shorts(\/|$)/;
 
 function checkRedirect() {
   if (!settings.redirectHomepage) return;
-
   const { pathname } = window.location;
-
   if (REDIRECT_PATHS.has(pathname) || SHORTS_RE.test(pathname)) {
-    // Replace so the back button doesn't loop
     window.location.replace('https://www.youtube.com/feed/subscriptions');
   }
 }
 
 // ─── Boot sequence ────────────────────────────────────────────────────────────
-//
-// 1. document_start: redirect fires immediately, before YouTube renders.
-// 2. After storage load: inject CSS.
-// 3. yt-navigate-finish: YouTube SPA navigation — re-check redirect + styles.
-//
 chrome.storage.sync.get(DEFAULT_SETTINGS, (stored) => {
   settings = { ...DEFAULT_SETTINGS, ...stored };
   applyStyles();
   checkRedirect();
 });
 
-// YouTube fires this on every client-side navigation
+// YouTube SPA navigation — re-apply after every client-side page transition
 document.addEventListener('yt-navigate-finish', () => {
   checkRedirect();
-  applyStyles(); // re-inject in case YouTube nuked our style element
+  applyStyles();
+  debugReport();
 });
 
-// Also catch early redirects before storage responds (document_start is very early)
+// Early redirect before storage resolves (document_start fires very early)
 if (settings.redirectHomepage) {
   checkRedirect();
 }
 
 // ─── Live settings sync ───────────────────────────────────────────────────────
-// When the popup changes a toggle, reflect it instantly on the open tab.
 chrome.storage.onChanged.addListener((changes) => {
   let changed = false;
   for (const [key, { newValue }] of Object.entries(changes)) {

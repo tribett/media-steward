@@ -1,0 +1,99 @@
+name: Extension Selector Health Check
+
+# Runs every Monday at 9 AM UTC.
+# Trigger manually from GitHub → Actions → "Run workflow".
+on:
+  schedule:
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Verify YouTube selectors still match
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install Playwright
+        run: |
+          npm install -D @playwright/test
+          npx playwright install chromium --with-deps
+
+      - name: Run selector health check
+        id: health
+        run: node .github/scripts/check-extension-selectors.js
+        continue-on-error: true
+
+      - name: Open GitHub issue if selectors are broken
+        if: steps.health.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          # Safe: all values are repo metadata or file contents we control —
+          # no user-supplied input is interpolated into shell commands.
+          script: |
+            const fs   = require('fs');
+            const date = new Date().toISOString().split('T')[0];
+
+            let report = '(report file not found)';
+            try { report = fs.readFileSync('/tmp/ms-health-report.txt', 'utf8'); } catch {}
+
+            // Skip if an open health issue already exists
+            const { data: open } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              state: 'open',
+              labels: 'extension-health',
+            });
+            if (open.length > 0) {
+              console.log('Issue already open — skipping.');
+              return;
+            }
+
+            const workflowUrl =
+              `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}` +
+              `/actions/workflows/extension-health.yml`;
+
+            await github.rest.issues.create({
+              owner:  context.repo.owner,
+              repo:   context.repo.repo,
+              title:  `Extension: YouTube selectors may be broken (${date})`,
+              labels: ['extension-health', 'bug'],
+              body: [
+                '## Extension Selector Health Check Failed',
+                '',
+                'The weekly automated check found that one or more CSS selectors',
+                'in `apps/extension/content.js` no longer match any YouTube elements.',
+                'YouTube may have updated its page structure.',
+                '',
+                '### Report',
+                '```',
+                report,
+                '```',
+                '',
+                '### How to fix',
+                '1. Open YouTube in Chrome with DevTools (F12)',
+                '2. Find a Shorts shelf on the homepage or in search',
+                '3. Right-click → Inspect and find the new element name or attribute',
+                '4. Update the `SELECTORS` object in `apps/extension/content.js`',
+                '5. Test: open YouTube console, set `MS_DEBUG = true`, then reload',
+                '',
+                '### Quick console test',
+                '```js',
+                "// Paste in YouTube's browser console to test a selector:",
+                "document.querySelectorAll('ytd-rich-shelf-renderer[is-shorts]').length",
+                '// Should return > 0 on the YouTube homepage',
+                '```',
+                '',
+                `*Opened by the [extension-health workflow](${workflowUrl})*`,
+              ].join('\n'),
+            });
