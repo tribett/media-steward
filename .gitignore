@@ -11,3 +11,8 @@ generated/
 !packages/db/generated/
 playwright-report/
 test-results/
+
+# IDE / tool data
+.claude/
+.DS_Store
+*.tsbuildinfo
