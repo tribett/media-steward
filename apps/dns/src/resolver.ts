@@ -55,7 +55,10 @@ export async function refreshBlocklists(): Promise<void> {
   for (const source of sources) {
     if (!source.url) continue;
     try {
-      const res = await fetch(source.url);
+      const res = await fetch(source.url, {
+        signal: AbortSignal.timeout(30_000),
+        headers: { 'User-Agent': 'media-steward/1.0 (https://github.com/media-steward)' },
+      });
       if (res.ok) {
         const text = await res.text();
         domains.push(parseHostsFile(text));

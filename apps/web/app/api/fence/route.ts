@@ -3,7 +3,12 @@ import { prisma } from '@media-steward/db';
 import { revalidatePath } from 'next/cache';
 
 export async function POST(request: NextRequest) {
-  const body = await request.json() as { enabled: unknown };
+  let body: { enabled: unknown };
+  try {
+    body = await request.json() as { enabled: unknown };
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+  }
   if (typeof body.enabled !== 'boolean') {
     return NextResponse.json({ error: 'enabled must be a boolean' }, { status: 400 });
   }

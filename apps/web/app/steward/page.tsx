@@ -152,12 +152,7 @@ export default async function StewardPage() {
                       className="peer sr-only"
                     />
                     <span
-                      className="inline-flex items-center justify-center px-3 py-1.5 rounded-full text-xs font-mono border transition-all duration-150 cursor-pointer select-none peer-checked:text-[oklch(0.085_0.006_55)]"
-                      style={{
-                        background: 'oklch(0.16 0.008 55)',
-                        borderColor: 'oklch(0.20 0.007 55)',
-                        color: 'oklch(0.55 0.018 65)',
-                      }}
+                      className="inline-flex items-center justify-center px-3 py-1.5 rounded-full text-xs font-mono border transition-all duration-150 cursor-pointer select-none bg-[oklch(0.16_0.008_55)] border-[oklch(0.20_0.007_55)] text-[oklch(0.55_0.018_65)] peer-checked:bg-[oklch(0.72_0.12_65)] peer-checked:border-[oklch(0.72_0.12_65)] peer-checked:text-[oklch(0.085_0.006_55)]"
                     >
                       {ABBR_DAYS[i]}
                     </span>

@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { prisma } from '@media-steward/db';
 import { addFeed, deleteFeed, toggleFeed } from './actions';
 
@@ -29,6 +28,16 @@ function extractLink(xml: string): string {
   return atomLink?.[1] ?? '';
 }
 
+/** Only allow http/https links — discards javascript: and other dangerous protocols. */
+function sanitizeHref(href: string): string {
+  try {
+    const { protocol } = new URL(href);
+    return protocol === 'https:' || protocol === 'http:' ? href : '';
+  } catch {
+    return '';
+  }
+}
+
 async function fetchFeed(feed: { name: string; url: string }): Promise<FeedItem[]> {
   try {
     const res = await fetch(feed.url, {
@@ -52,8 +61,9 @@ async function fetchFeed(feed: { name: string; url: string }): Promise<FeedItem[
         extractTag(block, 'updated');
       const date = dateStr ? new Date(dateStr) : null;
 
-      if (link) {
-        items.push({ title, link, date, feedName: feed.name });
+      const safeLink = sanitizeHref(link);
+      if (safeLink) {
+        items.push({ title, link: safeLink, date, feedName: feed.name });
       }
     }
 
