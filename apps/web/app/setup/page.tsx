@@ -166,14 +166,6 @@ export default async function SetupPage() {
               color: 'oklch(0.085 0.006 55)',
               boxShadow: '0 0 20px oklch(0.72 0.12 65 / 0.2)',
             }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = 'oklch(0.78 0.12 65)';
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 30px oklch(0.72 0.12 65 / 0.35)';
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = 'oklch(0.72 0.12 65)';
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 20px oklch(0.72 0.12 65 / 0.2)';
-            }}
           >
             Begin stewarding →
           </button>
