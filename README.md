@@ -12,6 +12,7 @@
 ![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=flat-square&logo=typescript)
+![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-4%2F5-C51A4A?style=flat-square&logo=raspberrypi)
 
 </div>
 
@@ -33,7 +34,7 @@ The interface uses a warm amber aesthetic designed to feel calm and purposeful, 
 
 ## Quick Start
 
-**Requirements:** Docker Desktop, macOS or Linux (Linux needs `ip addr` instead of `ipconfig`).
+**Requirements:** Docker, macOS or Linux (including Raspberry Pi 4/5).
 
 ```bash
 git clone https://github.com/tribett/media-steward.git
@@ -46,6 +47,28 @@ Then open **http://localhost:3000** and complete the 4-step setup wizard.
 Finally, point your router's Primary DNS to this machine's IP address. Every device on your network is now covered.
 
 > **BrightSpeed routers:** Router Settings → Internet → DNS Settings → Primary DNS
+
+---
+
+## Raspberry Pi
+
+Media Steward runs great on a Raspberry Pi 4 or 5 (64-bit Raspberry Pi OS). The `node:22-alpine` Docker image is multi-arch and pulls the right `arm64` layer automatically.
+
+**One gotcha:** Raspberry Pi OS (and Ubuntu) bind a stub resolver to port 53 via `systemd-resolved`. You need to free that port before starting:
+
+```bash
+sudo systemctl disable --now systemd-resolved
+sudo rm -f /etc/resolv.conf
+echo 'nameserver 8.8.8.8' | sudo tee /etc/resolv.conf
+```
+
+Then run `./start.sh` as normal. The script will warn you automatically if port 53 is still occupied.
+
+**Install Docker on Pi:**
+```bash
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER   # log out and back in after this
+```
 
 ---
 
