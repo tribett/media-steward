@@ -19,7 +19,8 @@ export function CopyButton({ text }: CopyButtonProps) {
     <button
       type="button"
       onClick={handleCopy}
-      className="text-xs text-zinc-400 hover:text-emerald-400 transition-colors font-mono ml-2"
+      className="text-xs font-mono transition-colors ml-2"
+      style={copied ? { color: 'oklch(0.72 0.12 65)' } : { color: 'oklch(0.55 0.018 65)' }}
     >
       {copied ? '✓ copied' : 'copy'}
     </button>

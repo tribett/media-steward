@@ -11,24 +11,26 @@ export default async function StewardPage() {
   const rhythms = await prisma.mediaRhythm.findMany();
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-100">
-      <div className="max-w-3xl mx-auto px-4 py-8 space-y-10">
+    <main className="min-h-screen pt-14 md:pt-0">
+      <div className="max-w-3xl mx-auto px-5 py-10 space-y-10">
+
         {/* Header */}
         <div>
-          <Link href="/" className="text-zinc-500 hover:text-zinc-300 text-sm mb-2 inline-block">
-            ← Dashboard
-          </Link>
-          <h1 className="text-2xl font-bold text-zinc-100">Steward</h1>
-          <p className="text-zinc-400 text-sm mt-1">
-            Your household's intentional media rhythms — practices you've chosen.
+          <p className="text-xs font-mono text-muted-foreground mb-1 tracking-wider uppercase">Section</p>
+          <h1 className="text-3xl font-serif font-semibold text-foreground tracking-tight">Steward</h1>
+          <p className="text-muted-foreground text-sm mt-1.5">
+            Your household&apos;s intentional media rhythms — practices you&apos;ve chosen.
           </p>
         </div>
 
         {/* Rhythm cards */}
         {rhythms.length === 0 ? (
-          <p className="text-zinc-500 text-sm">
-            No rhythms yet. Add one below to get started.
-          </p>
+          <div className="py-16 text-center">
+            <div className="text-muted-foreground/30 text-5xl mb-4 font-serif">∅</div>
+            <p className="text-muted-foreground text-sm">
+              No rhythms yet. Add one below to get started.
+            </p>
+          </div>
         ) : (
           <div className="space-y-3">
             {rhythms.map((rhythm) => {
@@ -42,35 +44,46 @@ export default async function StewardPage() {
               return (
                 <div
                   key={rhythm.id}
-                  className="bg-zinc-900 border border-zinc-800 rounded-lg px-5 py-4"
+                  className="bg-card border border-border rounded-xl px-5 py-5"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-semibold text-zinc-100">{rhythm.title}</h3>
+                      <div className="flex items-center gap-2.5 flex-wrap">
+                        <h3 className="font-serif font-semibold text-foreground">{rhythm.title}</h3>
                         {rhythm.time && (
-                          <span className="text-xs font-mono text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded">
+                          <span
+                            className="text-xs font-mono px-2 py-0.5 rounded-full"
+                            style={{
+                              background: 'oklch(0.16 0.04 55)',
+                              color: 'oklch(0.72 0.12 65)',
+                            }}
+                          >
                             {rhythm.time}
                           </span>
                         )}
                       </div>
                       {rhythm.description && (
-                        <p className="text-zinc-400 text-sm mt-1">{rhythm.description}</p>
+                        <p className="text-muted-foreground text-sm mt-1.5 leading-relaxed">{rhythm.description}</p>
                       )}
                       {/* Day pills */}
-                      <div className="flex gap-1 mt-3 flex-wrap">
-                        {FULL_DAYS.map((fullDay, i) => (
-                          <span
-                            key={fullDay}
-                            className={`text-xs px-2 py-0.5 rounded font-mono ${
-                              parsedDays.includes(fullDay)
-                                ? 'bg-zinc-700 text-zinc-200'
-                                : 'text-zinc-700'
-                            }`}
-                          >
-                            {ABBR_DAYS[i]}
-                          </span>
-                        ))}
+                      <div className="flex gap-1.5 mt-3.5 flex-wrap">
+                        {FULL_DAYS.map((fullDay, i) => {
+                          const active = parsedDays.includes(fullDay);
+                          return (
+                            <span
+                              key={fullDay}
+                              className="text-xs px-2.5 py-1 rounded-full font-mono"
+                              style={active ? {
+                                background: 'oklch(0.20 0.007 55)',
+                                color: 'oklch(0.92 0.012 75)',
+                              } : {
+                                color: 'oklch(0.36 0.012 60)',
+                              }}
+                            >
+                              {ABBR_DAYS[i]}
+                            </span>
+                          );
+                        })}
                       </div>
                     </div>
                     {/* Delete button */}
@@ -78,9 +91,9 @@ export default async function StewardPage() {
                       <input type="hidden" name="id" value={rhythm.id} />
                       <button
                         type="submit"
-                        className="text-zinc-600 hover:text-red-400 text-sm transition-colors flex-shrink-0"
+                        className="text-muted-foreground hover:text-destructive text-sm transition-colors flex-shrink-0 px-1"
                       >
-                        ×
+                        &times;
                       </button>
                     </form>
                   </div>
@@ -92,56 +105,75 @@ export default async function StewardPage() {
 
         {/* Add rhythm form */}
         <section>
-          <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wide mb-4">
+          <h2 className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-5">
             Add a Rhythm
           </h2>
-          <form action={addRhythm} className="space-y-4 bg-zinc-900 border border-zinc-800 rounded-lg p-5">
+          <form action={addRhythm} className="space-y-5 bg-card border border-border rounded-xl p-6">
+
             <div>
-              <label className="block text-xs text-zinc-400 mb-1">Title *</label>
+              <label className="block text-xs text-muted-foreground mb-1.5 font-medium">Title *</label>
               <input
                 type="text"
                 name="title"
                 required
                 placeholder="No screens before breakfast"
-                className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full bg-secondary border border-border rounded-lg px-3 py-2.5 text-sm text-foreground placeholder-muted-foreground focus:outline-none"
               />
             </div>
+
             <div>
-              <label className="block text-xs text-zinc-400 mb-1">Description</label>
+              <label className="block text-xs text-muted-foreground mb-1.5 font-medium">Description</label>
               <input
                 type="text"
                 name="description"
                 placeholder="Optional description"
-                className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full bg-secondary border border-border rounded-lg px-3 py-2.5 text-sm text-foreground placeholder-muted-foreground focus:outline-none"
               />
             </div>
+
             <div>
-              <label className="block text-xs text-zinc-400 mb-1">Time</label>
+              <label className="block text-xs text-muted-foreground mb-1.5 font-medium">Time</label>
               <input
                 type="text"
                 name="time"
                 placeholder="7:00 PM"
-                className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full bg-secondary border border-border rounded-lg px-3 py-2.5 text-sm text-foreground placeholder-muted-foreground focus:outline-none"
               />
             </div>
+
             <div>
-              <label className="block text-xs text-zinc-400 mb-2">Days</label>
+              <label className="block text-xs text-muted-foreground mb-3 font-medium">Days</label>
               <div className="flex gap-2 flex-wrap">
                 {FULL_DAYS.map((fullDay, i) => (
-                  <label key={fullDay} className="flex items-center gap-1.5 cursor-pointer">
+                  <label key={fullDay} className="relative cursor-pointer">
                     <input
                       type="checkbox"
                       name={`day_${fullDay}`}
-                      className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-800 checked:bg-emerald-500 checked:border-emerald-500"
+                      className="peer sr-only"
                     />
-                    <span className="text-xs text-zinc-300 font-mono">{ABBR_DAYS[i]}</span>
+                    <span
+                      className="inline-flex items-center justify-center px-3 py-1.5 rounded-full text-xs font-mono border transition-all duration-150 cursor-pointer select-none peer-checked:text-[oklch(0.085_0.006_55)]"
+                      style={{
+                        background: 'oklch(0.16 0.008 55)',
+                        borderColor: 'oklch(0.20 0.007 55)',
+                        color: 'oklch(0.55 0.018 65)',
+                      }}
+                    >
+                      {ABBR_DAYS[i]}
+                    </span>
                   </label>
                 ))}
               </div>
+              <p className="text-xs text-muted-foreground/50 mt-2">Leave all unchecked for every day</p>
             </div>
+
             <button
               type="submit"
-              className="bg-emerald-700 hover:bg-emerald-600 text-white px-4 py-2 rounded text-sm font-medium transition-colors"
+              className="py-2.5 px-5 rounded-lg text-sm font-medium transition-all duration-150"
+              style={{
+                background: 'oklch(0.72 0.12 65)',
+                color: 'oklch(0.085 0.006 55)',
+              }}
             >
               Add Rhythm
             </button>

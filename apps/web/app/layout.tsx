@@ -1,7 +1,27 @@
 import type { Metadata } from 'next';
-import { GeistSans } from 'geist/font/sans';
-import { GeistMono } from 'geist/font/mono';
+import { Lora, DM_Sans, JetBrains_Mono } from 'next/font/google';
+import { Nav } from '@/components/nav';
 import './globals.css';
+
+const lora = Lora({
+  subsets: ['latin'],
+  variable: '--font-serif',
+  display: 'swap',
+});
+
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap',
+  weight: ['300', '400', '500', '600'],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
+  display: 'swap',
+  weight: ['400', '500'],
+});
 
 export const metadata: Metadata = {
   title: 'Media Steward',
@@ -16,10 +36,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`dark ${GeistSans.variable} ${GeistMono.variable}`}
+      className={`dark ${lora.variable} ${dmSans.variable} ${jetbrainsMono.variable}`}
     >
-      <body className="antialiased bg-zinc-950 text-zinc-50 min-h-screen font-sans">
-        {children}
+      <body className="min-h-screen bg-background text-foreground">
+        <div className="flex min-h-screen">
+          <Nav />
+          <div className="flex-1 min-w-0 md:ml-52">
+            {children}
+          </div>
+        </div>
       </body>
     </html>
   );
